@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Button, Spinner, Alert } from 'react-bootstrap';
+import { Modal, Form, Button, Spinner, Alert, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -17,6 +17,8 @@ const AuthModal = ({ type = 'login', show = false, onHide }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isLogin = type === 'login';
 
@@ -146,31 +148,49 @@ const AuthModal = ({ type = 'login', show = false, onHide }) => {
         
         {isLogin ? (
           <Form onSubmit={handleLoginSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Username or Email</Form.Label>
-              <Form.Control
-                type="text"
-                name="username"
-                value={loginData.username}
-                onChange={handleLoginChange}
-                placeholder="Enter username or email"
-                required
-                disabled={loading}
-              />
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={loginData.password}
-                onChange={handleLoginChange}
-                placeholder="Enter password"
-                required
-                disabled={loading}
-              />
-            </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Username or Email</Form.Label>
+                <InputGroup>
+                  <InputGroup.Text>
+                    <i className="bi bi-person"></i>
+                  </InputGroup.Text>
+                  <Form.Control
+                    type="text"
+                    name="username"
+                    value={loginData.username}
+                    onChange={handleLoginChange}
+                    placeholder="Enter username or email"
+                    required
+                    disabled={loading}
+                  />
+                </InputGroup>
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Password</Form.Label>
+                <InputGroup>
+                  <InputGroup.Text>
+                    <i className="bi bi-lock"></i>
+                  </InputGroup.Text>
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={loginData.password}
+                    onChange={handleLoginChange}
+                    placeholder="Enter password"
+                    required
+                    disabled={loading}
+                  />
+                  <Button 
+                    variant="link"
+                    type="button"
+                    className="toggle-password"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                  </Button>
+                </InputGroup>
+              </Form.Group>
             
             <Button 
               variant="primary" 
@@ -201,41 +221,56 @@ const AuthModal = ({ type = 'login', show = false, onHide }) => {
           <Form onSubmit={handleSignupSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Full Name</Form.Label>
-              <Form.Control
-                type="text"
-                name="full_name"
-                value={signupData.full_name}
-                onChange={handleSignupChange}
-                placeholder="Enter your full name"
-                required
-                disabled={loading}
-              />
+              <InputGroup>
+                <InputGroup.Text>
+                  <i className="bi bi-person-badge"></i>
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  name="full_name"
+                  value={signupData.full_name}
+                  onChange={handleSignupChange}
+                  placeholder="Enter your full name"
+                  required
+                  disabled={loading}
+                />
+              </InputGroup>
             </Form.Group>
             
             <Form.Group className="mb-3">
               <Form.Label>Username</Form.Label>
-              <Form.Control
-                type="text"
-                name="username"
-                value={signupData.username}
-                onChange={handleSignupChange}
-                placeholder="Choose a username"
-                required
-                disabled={loading}
-              />
+              <InputGroup>
+                <InputGroup.Text>
+                  <i className="bi bi-at"></i>
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  name="username"
+                  value={signupData.username}
+                  onChange={handleSignupChange}
+                  placeholder="Choose a username"
+                  required
+                  disabled={loading}
+                />
+              </InputGroup>
             </Form.Group>
             
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={signupData.email}
-                onChange={handleSignupChange}
-                placeholder="Enter your email"
-                required
-                disabled={loading}
-              />
+              <InputGroup>
+                <InputGroup.Text>
+                  <i className="bi bi-envelope"></i>
+                </InputGroup.Text>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={signupData.email}
+                  onChange={handleSignupChange}
+                  placeholder="Enter your email"
+                  required
+                  disabled={loading}
+                />
+              </InputGroup>
             </Form.Group>
             
             <Form.Group className="mb-3">
@@ -254,28 +289,54 @@ const AuthModal = ({ type = 'login', show = false, onHide }) => {
             
             <Form.Group className="mb-3">
               <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={signupData.password}
-                onChange={handleSignupChange}
-                placeholder="Create a password"
-                required
-                disabled={loading}
-              />
+              <InputGroup>
+                <InputGroup.Text>
+                  <i className="bi bi-lock"></i>
+                </InputGroup.Text>
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={signupData.password}
+                  onChange={handleSignupChange}
+                  placeholder="Create a password"
+                  required
+                  disabled={loading}
+                />
+                <Button 
+                  variant="link"
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                </Button>
+              </InputGroup>
             </Form.Group>
             
             <Form.Group className="mb-3">
               <Form.Label>Confirm Password</Form.Label>
-              <Form.Control
-                type="password"
-                name="confirm_password"
-                value={signupData.confirm_password}
-                onChange={handleSignupChange}
-                placeholder="Confirm your password"
-                required
-                disabled={loading}
-              />
+              <InputGroup>
+                <InputGroup.Text>
+                  <i className="bi bi-lock-fill"></i>
+                </InputGroup.Text>
+                <Form.Control
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirm_password"
+                  value={signupData.confirm_password}
+                  onChange={handleSignupChange}
+                  placeholder="Confirm your password"
+                  required
+                  disabled={loading}
+                />
+                <Button 
+                  variant="link"
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                </Button>
+              </InputGroup>
             </Form.Group>
             
             <Button 

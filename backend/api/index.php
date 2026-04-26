@@ -21,6 +21,7 @@ require_once __DIR__ . '/../controllers/Auth.php';
 require_once __DIR__ . '/../controllers/Student.php';
 require_once __DIR__ . '/../controllers/ClassController.php';
 require_once __DIR__ . '/../controllers/Dashboard.php';
+require_once __DIR__ . '/../controllers/Admin.php';
 
 // Get request method and URI
 $method = $_SERVER['REQUEST_METHOD'];
@@ -109,6 +110,16 @@ try {
             }
             break;
             
+        case 'auth':
+            $auth = new Auth();
+            if ($method === 'POST' && $id === 'register') {
+                $auth->register();
+            } else {
+                http_response_code(405);
+                echo json_encode(["error" => "Method not allowed. Use POST /api/auth/register."]);
+            }
+            break;
+            
         case 'dashboard':
             $dashboard = new Dashboard();
             if ($method === 'GET') {
@@ -185,6 +196,43 @@ try {
                     } else {
                         http_response_code(400);
                         echo json_encode(["error" => "Class ID required"]);
+                    }
+                    break;
+                default:
+                    http_response_code(405);
+                    echo json_encode(["error" => "Method not allowed"]);
+            }
+            break;
+            
+        case 'admin':
+            $admin = new Admin();
+            switch ($method) {
+                case 'GET':
+                    if ($id === 'pending-users') {
+                        $admin->getPendingUsers();
+                    } elseif ($id === 'users') {
+                        $admin->getAllUsers();
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(["error" => "Invalid endpoint. Use /admin/pending-users or /admin/users"]);
+                    }
+                    break;
+                case 'POST':
+                    if ($id === 'approve-user') {
+                        $admin->approveUser($uri[2] ?? null);
+                    } elseif ($id === 'toggle-user') {
+                        $admin->toggleUserStatus($uri[2] ?? null);
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(["error" => "Invalid endpoint"]);
+                    }
+                    break;
+                case 'DELETE':
+                    if ($id === 'users' && isset($uri[2])) {
+                        $admin->rejectUser($uri[2]);
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(["error" => "Invalid endpoint. Use DELETE /admin/users/:id"]);
                     }
                     break;
                 default:

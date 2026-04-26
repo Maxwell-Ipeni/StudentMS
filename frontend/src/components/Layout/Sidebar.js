@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Nav } from 'react-bootstrap';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Nav, Badge } from 'react-bootstrap';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const menuItems = [
-    { path: '/', icon: 'bi-house-door', label: 'Dashboard' },
+    { path: '/dashboard', icon: 'bi-speedometer2', label: 'Dashboard' },
     { path: '/students', icon: 'bi-people', label: 'Students' },
     { path: '/classes', icon: 'bi-building', label: 'Classes' },
+    { path: '/pending-users', icon: 'bi-person-check', label: 'Approvals', adminOnly: true },
   ];
+
+  const visibleMenuItems = menuItems.filter(item => {
+    if (item.adminOnly && user?.role !== 'admin') {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -27,7 +38,7 @@ const Sidebar = () => {
       </div>
       
       <Nav className="flex-column sidebar-nav">
-        {menuItems.map((item) => (
+        {visibleMenuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

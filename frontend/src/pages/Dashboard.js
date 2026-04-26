@@ -11,10 +11,21 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
 import dashboardService from '../services/dashboardService';
 import toast from 'react-hot-toast';
+
+const CHART_COLORS = {
+  primary: '#0d6efd',
+  success: '#198754',
+  warning: '#ffc107',
+  danger: '#dc3545',
+  info: '#6c757d',
+  purple: '#6f42c1',
+  pink: '#d63384'
+};
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -39,7 +50,19 @@ const Dashboard = () => {
     }
   };
 
-  const COLORS = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d'];
+  const COLORS = [CHART_COLORS.primary, CHART_COLORS.success, CHART_COLORS.pink, CHART_COLORS.warning, CHART_COLORS.info];
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.sin(-midAngle * RADIAN);
+    const y = cy - radius * Math.cos(-midAngle * RADIAN);
+    return (
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={600}>
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
   const formatGenderData = (data) => {
     return data?.map(item => ({
@@ -47,6 +70,24 @@ const Dashboard = () => {
       value: parseInt(item.count)
     })) || [];
   };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-tooltip-chart p-2 rounded shadow-sm" style={{ backgroundColor: '#fff', border: '1px solid #e9ecef' }}>
+          <p className="mb-0 fw-semibold">{label || payload[0]?.payload?.month_name}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="mb-0" style={{ color: entry.color }}>
+              {entry.name}: {entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const RADIAN = Math.PI / 180;
 
   const formatClassData = (data) => {
     return data?.map(item => ({
@@ -137,12 +178,28 @@ const Dashboard = () => {
             </Card.Header>
             <Card.Body>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={formatClassData(stats?.students_by_class)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="students" fill="#0d6efd" />
+                <BarChart data={formatClassData(stats?.students_by_class)} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fill: '#6c757d', fontSize: 12 }}
+                    axisLine={{ stroke: '#dee2e6' }}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fill: '#6c757d', fontSize: 12 }}
+                    axisLine={{ stroke: '#dee2e6' }}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar 
+                    dataKey="students" 
+                    fill={CHART_COLORS.primary}
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={50}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </Card.Body>
@@ -153,41 +210,32 @@ const Dashboard = () => {
             <Card.Header className="bg-white">
               <h6 className="mb-0">Gender Distribution</h6>
             </Card.Header>
-            <Card.Body>
-              <ResponsiveContainer width="100%" height={300}>
+            <Card.Body className="d-flex flex-column">
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={formatGenderData(stats?.gender_distribution)}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={4}
                     dataKey="value"
-                    label
+                    labelLine={false}
+                    label={renderCustomizedLabel}
                   >
                     {formatGenderData(stats?.gender_distribution).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#fff" strokeWidth={2} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value) => <span style={{ color: '#495057', fontSize: 13 }}>{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="text-center mt-2">
-                {stats?.gender_distribution?.map((item, index) => (
-                  <span key={item.gender} className="me-3">
-                    <span
-                      className="d-inline-block rounded-circle me-1"
-                      style={{
-                        width: 12,
-                        height: 12,
-                        backgroundColor: COLORS[index % COLORS.length]
-                      }}
-                    ></span>
-                    {item.gender}: {item.count}
-                  </span>
-                ))}
-              </div>
             </Card.Body>
           </Card>
         </Col>
@@ -256,14 +304,32 @@ const Dashboard = () => {
             </Card.Header>
             <Card.Body>
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={stats?.monthly_admissions || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tickFormatter={(value) => value.slice(-2)} />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value, name, props) => [value, props.payload.month_name]}
+                <BarChart data={stats?.monthly_admissions || []} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" vertical={false} />
+                  <XAxis 
+                    dataKey="month" 
+                    tickFormatter={(value) => value?.slice(-2) || ''}
+                    tick={{ fill: '#6c757d', fontSize: 11 }}
+                    axisLine={{ stroke: '#dee2e6' }}
+                    tickLine={false}
                   />
-                  <Bar dataKey="count" fill="#198754" />
+                  <YAxis 
+                    tick={{ fill: '#6c757d', fontSize: 11 }}
+                    axisLine={{ stroke: '#dee2e6' }}
+                    tickLine={false}
+                    width={30}
+                  />
+                  <Tooltip 
+                    content={<CustomTooltip />}
+                    formatter={(value, name, props) => [value, props.payload?.month_name || 'Admissions']}
+                  />
+                  <Bar 
+                    dataKey="count" 
+                    fill={CHART_COLORS.success}
+                    radius={[4, 4, 0, 0]}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </Card.Body>

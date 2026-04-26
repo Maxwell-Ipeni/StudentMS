@@ -38,7 +38,7 @@ class Auth {
         
         try {
             // Get user from database
-            $query = "SELECT id, username, email, password_hash, full_name, role, is_active, last_login 
+            $query = "SELECT id, username, email, password_hash, full_name, role, is_active, is_approved, last_login 
                       FROM users 
                       WHERE username = :username OR email = :email";
             
@@ -56,6 +56,11 @@ class Auth {
             // Check if user is active
             if (!$user['is_active']) {
                 Response::error("Account is inactive. Please contact administrator", 403);
+            }
+            
+            // Check if user is approved
+            if (!$user['is_approved']) {
+                Response::error("Account pending approval. Please wait for administrator to approve your account.", 403);
             }
             
             // Verify password
@@ -170,8 +175,74 @@ class Auth {
      * POST /api/logout
      */
     public function logout() {
-        // For JWT, logout is typically handled client-side by removing the token
-        // You can implement token blacklisting here if needed
         Response::success(null, "Logout successful");
+    }
+    
+    /**
+     * Register new user
+     * POST /api/auth/register
+     */
+    public function register() {
+        $data = json_decode(file_get_contents("php://input"), true);
+        
+        $full_name = trim($data['full_name'] ?? '');
+        $username = trim($data['username'] ?? '');
+        $email = trim($data['email'] ?? '');
+        $password = $data['password'] ?? '';
+        $role = trim($data['role'] ?? 'student');
+        
+        if (empty($full_name) || empty($username) || empty($email) || empty($password)) {
+            Response::validationError([
+                "full_name" => "Full name is required",
+                "username" => "Username is required",
+                "email" => "Email is required",
+                "password" => "Password is required"
+            ]);
+        }
+        
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Response::validationError(["email" => "Invalid email format"]);
+        }
+        
+        if (strlen($password) < 6) {
+            Response::validationError(["password" => "Password must be at least 6 characters"]);
+        }
+        
+        $validRoles = ['student', 'teacher', 'admin'];
+        if (!in_array($role, $validRoles)) {
+            $role = 'student';
+        }
+        
+        try {
+            $checkQuery = "SELECT id FROM users WHERE username = :username OR email = :email";
+            $checkStmt = $this->conn->prepare($checkQuery);
+            $checkStmt->bindParam(':username', $username);
+            $checkStmt->bindParam(':email', $email);
+            $checkStmt->execute();
+            
+            if ($checkStmt->fetch()) {
+                Response::error("Username or email already exists", 400);
+            }
+            
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            
+            $insertQuery = "INSERT INTO users (full_name, username, email, password_hash, role, is_active, is_approved, created_at) 
+                            VALUES (:full_name, :username, :email, :password_hash, :role, 1, 0, NOW())";
+            
+            $insertStmt = $this->conn->prepare($insertQuery);
+            $insertStmt->bindParam(':full_name', $full_name);
+            $insertStmt->bindParam(':username', $username);
+            $insertStmt->bindParam(':email', $email);
+            $insertStmt->bindParam(':password_hash', $passwordHash);
+            $insertStmt->bindParam(':role', $role);
+            $insertStmt->execute();
+            
+            Response::success([
+                'user_id' => $this->conn->lastInsertId()
+            ], "Registration successful");
+            
+        } catch (PDOException $e) {
+            Response::error("Registration failed: " . $e->getMessage(), 500);
+        }
     }
 }

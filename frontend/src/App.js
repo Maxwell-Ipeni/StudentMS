@@ -6,6 +6,7 @@ import Layout from './components/Layout/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import PendingUsers from './pages/PendingUsers';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import StudentForm from './pages/StudentForm';
@@ -121,6 +122,14 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Classes />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/pending-users" element={
+          <ProtectedRoute>
+            <Layout>
+              <PendingUsers />
             </Layout>
           </ProtectedRoute>
         } />
