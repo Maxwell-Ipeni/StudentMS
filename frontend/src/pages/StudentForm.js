@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Form, 
   Button, 
@@ -49,9 +49,9 @@ const StudentForm = ({ mode }) => {
     if (isEditMode || isViewMode) {
       fetchStudent();
     }
-  }, [id]);
+  }, [id, isEditMode, isViewMode, fetchClasses, fetchStudent]);
 
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     try {
       const response = await classService.getAll();
       if (response.success) {
@@ -60,9 +60,9 @@ const StudentForm = ({ mode }) => {
     } catch (error) {
       console.error('Failed to load classes');
     }
-  };
+  }, []);
 
-  const fetchStudent = async () => {
+  const fetchStudent = useCallback(async () => {
     try {
       setLoading(true);
       const response = await studentService.getById(id);
@@ -91,7 +91,7 @@ const StudentForm = ({ mode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

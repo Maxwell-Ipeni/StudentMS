@@ -6,8 +6,15 @@
 
 class JWT {
     
-    private static $secretKey = "your-secret-key-change-this-in-production-2024";
+    private static $secretKey;
     private static $algorithm = "HS256";
+    
+    private static function getSecretKey() {
+        if (self::$secretKey === null) {
+            self::$secretKey = getenv('JWT_SECRET') ?: 'change-this-secret-in-production';
+        }
+        return self::$secretKey;
+    }
     
     /**
      * Generate JWT token
@@ -28,7 +35,7 @@ class JWT {
         $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
         $base64Payload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(json_encode($payload)));
         
-        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, self::$secretKey, true);
+        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, self::getSecretKey(), true);
         $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
         
         return $base64Header . "." . $base64Payload . "." . $base64Signature;
@@ -63,7 +70,7 @@ class JWT {
             $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
             $base64Payload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
             
-            $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, self::$secretKey, true);
+            $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, self::getSecretKey(), true);
             $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
             
             if (!hash_equals($base64Signature, $signatureProvided)) {

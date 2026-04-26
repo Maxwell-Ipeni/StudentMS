@@ -4,6 +4,10 @@
  * Student Management System - Main Entry Point
  */
 
+// Load environment variables
+require_once __DIR__ . '/../utils/EnvLoader.php';
+EnvLoader::load();
+
 // CORS headers are handled by .htaccess
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

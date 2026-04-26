@@ -1,9 +1,17 @@
 import axios from 'axios';
 
-// API Base URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost/StudentMS/backend/api';
+const getApiUrl = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://your-domain.com/backend/api';
+  }
+  return '/api';
+};
 
-// Create axios instance
+const API_URL = getApiUrl();
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {

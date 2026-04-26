@@ -4,14 +4,24 @@
  * Student Management System
  */
 
+require_once __DIR__ . '/../utils/EnvLoader.php';
+EnvLoader::load();
+
 class Database {
-    private $host = "localhost";
-    private $db_name = "student_management_system";
-    private $username = "root"; // Change for production
-    private $password = ""; // Change for production
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
     private $charset = "utf8mb4";
     
     public $conn;
+    
+    public function __construct() {
+        $this->host = getenv('DB_HOST') ?: 'localhost';
+        $this->db_name = getenv('DB_NAME') ?: 'student_management_system';
+        $this->username = getenv('DB_USER') ?: 'root';
+        $this->password = getenv('DB_PASS') ?: '';
+    }
     
     /**
      * Get database connection
